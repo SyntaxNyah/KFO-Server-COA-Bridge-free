@@ -39,7 +39,6 @@ class TsuServer3:
         self.char_list = None
         self.char_emotes = None
         self.music_list = []
-        self.music_whitelist = []
         self.backgrounds = None
         self.server_links = None
         self.zalgo_tolerance = None
@@ -352,11 +351,6 @@ class TsuServer3:
                 self.music_list = yaml.safe_load(music)
         except Exception:
             logger.debug("Cannot find music.yaml")
-        try:
-            with open("config/url.txt", "r", encoding="utf-8") as url:
-                self.music_whitelist = url.read().splitlines()
-        except Exception:
-            logger.debug("Cannot find url.txt")
 
     def build_music_list(self, music_list):
         song_list = []
