@@ -1091,46 +1091,6 @@ class AOProtocol(asyncio.Protocol):
                 or self.client.area.last_ic_message is None
                 or self.client.area.last_ic_message[4].strip() != ""
             ):
-                # Discord Bridgebot
-                if (
-                    "bridgebot" in self.server.config
-                    and self.server.config["bridgebot"]["enabled"]
-                    and self.client.area.area_manager.id == self.server.bridgebot.hub_id
-                    and self.client.area.id == self.server.bridgebot.area_id
-                ):
-                    webname = self.client.char_name
-                    if showname != "" and showname != self.client.area.area_manager.char_list[cid]:
-                        webname = f"{showname} ({webname})"
-                    # you'll hate me for this
-                    text = (
-                        msg.replace("}", "")
-                        .replace("{", "")
-                        .replace("`", "")
-                        .replace("|", "")
-                        .replace("~", "")
-                        .replace("º", "")
-                        .replace("№", "")
-                        .replace("√", "")
-                        .replace("\\s", "")
-                        .replace("\\f", "")
-                    )
-                    # escape chars
-                    text = text.replace(
-                        "@", "@\u200b"
-                    )  # The only way to escape a Discord ping is a zero width space...
-                    text = text.replace("<num>", "\\#")
-                    text = text.replace("<and>", "&")
-                    text = text.replace("<percent>", "%")
-                    text = text.replace("<dollar>", "$")
-                    text = text.replace("*", "\\*")
-                    text = text.replace("_", "\\_")
-                    # String is empty if we're strippin
-                    if not text.strip():
-                        # Discord blankpost
-                        text = "_ _"
-                    self.server.bridgebot.queue_message(
-                        webname, text, self.client.char_name, anim
-                    )
 
         # Check whether or not the reserved character for Emote Tags is in the message
         if "¨" in text:

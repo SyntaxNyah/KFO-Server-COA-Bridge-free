@@ -12,14 +12,11 @@ from server import database
 from server.hub_manager import HubManager
 from server.client_manager import ClientManager
 from server.emotes import Emotes
-from server.discordbot import Bridgebot
 from server.exceptions import ClientError, ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
 from server.network.webhooks import Webhooks
-from server.constants import remove_URL, dezalgo
-
 
 logger = logging.getLogger("main")
 
@@ -107,7 +104,6 @@ class TsuServer3:
         server.logger.setup_logging(debug=self.config["debug"])
 
         self.webhooks = Webhooks(self)
-        self.bridgebot = None
 
     def start(self):
         """Start the server."""
@@ -137,20 +133,6 @@ class TsuServer3:
         if self.config["zalgo_tolerance"]:
             self.zalgo_tolerance = self.config["zalgo_tolerance"]
 
-        if "bridgebot" in self.config and self.config["bridgebot"]["enabled"]:
-            try:
-                self.bridgebot = Bridgebot(
-                    self,
-                    self.config["bridgebot"]["channel"],
-                    self.config["bridgebot"]["hub_id"],
-                    self.config["bridgebot"]["area_id"],
-                )
-                asyncio.ensure_future(
-                    self.bridgebot.init(self.config["bridgebot"]["token"]), loop=loop
-                )
-            except Exception as ex:
-                # Don't end the whole server if bridgebot destroys itself
-                print(ex)
         asyncio.ensure_future(self.schedule_unbans())
 
         database.log_misc("start")
@@ -498,35 +480,6 @@ class TsuServer3:
                     return
 
         client.send_command("ARUP", *args)
-
-    def send_discord_chat(self, name, message, hub_id=0, area_id=0):
-        area = self.hub_manager.get_hub_by_id(hub_id).get_area_by_id(area_id)
-        cid = area.area_manager.get_char_id_by_name(
-            self.config["bridgebot"]["character"])
-        message = dezalgo(message)
-        message = remove_URL(message)
-        message = (
-            message.replace("}", "\\}")
-            .replace("{", "\\{")
-            .replace("`", "\\`")
-            .replace("|", "\\|")
-            .replace("~", "\\~")
-            .replace("º", "\\º")
-            .replace("№", "\\№")
-            .replace("√", "\\√")
-            .replace("\\s", "")
-            .replace("\\f", "")
-        )
-        message = self.config["bridgebot"]["prefix"] + message
-        if len(name) > 14:
-            name = name[:14].rstrip() + "."
-        area.send_ic(
-            folder=self.config["bridgebot"]["character"],
-            anim=self.config["bridgebot"]["emote"],
-            showname=name,
-            msg=message,
-            pos=self.config["bridgebot"]["pos"],
-        )
 
     def refresh(self):
         """
