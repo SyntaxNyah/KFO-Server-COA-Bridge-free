@@ -83,7 +83,7 @@ def new_websocket_client(server):
 
     """
 
-    async def func(websocket):
+    async def func(websocket, _):
         client = AOProtocolWS(server, websocket)
         while client.ws_connected:
             await client.ws_handle()
