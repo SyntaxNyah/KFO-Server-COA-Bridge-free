@@ -51,6 +51,20 @@ class AOProtocol(asyncio.Protocol):
             # try to decode as utf-8, ignore any erroneous characters
             buf = self.buffer + buf.decode("utf-8", "ignore")
 
+        # Detect WebSocket/HTTP upgrade attempts on the TCP port and close cleanly.
+        # Without this, WS clients get raw AO2 data back and drop with an abnormal closure.
+        if not self.buffer and buf.startswith("GET ") and "Upgrade: websocket" in buf:
+            if self.client:
+                self.client.transport.write(
+                    b"HTTP/1.1 426 Upgrade Required\r\n"
+                    b"Content-Type: text/plain\r\n"
+                    b"Connection: close\r\n\r\n"
+                    b"This port is for AO2 TCP connections only. "
+                    b"Please connect via the WebSocket port.\r\n"
+                )
+                self.client.disconnect()
+            return
+
         buf = buf.translate({ord(c): None for c in "\0"})
 
         packet_size = 1024  # in bits
